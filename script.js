@@ -5,7 +5,7 @@ async function generate() {
   const reader = new FileReader();
   reader.onload = async () => {
     const base64 = reader.result.split(',')[1];
-    const res = await fetch("https://hook.us2.make.com/your-webhook", {
+    const res = await fetch("https://hook.eu2.make.com/uhsiqjufw0q2tx5axepxmwaj986mx6e0", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -1,15 +1,50 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Ghibli Image Generator</title>
+  <title>Ghibli AI Generator</title>
+  <style>
+    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 40px; }
+    .upload { background: #222; padding: 20px; border-radius: 10px; }
+    button { margin-top: 15px; background: #00ffcc; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    #result { margin-top: 20px; }
+  </style>
 </head>
 <body>
-  <h1>Upload Your Room in Ghibli Style</h1>
+
+<h2>Upload Your Image for Ghibli AI</h2>
+<div class="upload">
   <input type="file" id="upload" />
-  <button onclick="generate()">Generate</button>
-  <div id="result"></div>
-  <script src="script.js"></script>
+  <button onclick="uploadImage()">Generate</button>
+</div>
+<div id="loading"></div>
+<div id="result"></div>
+
+<script>
+  async function uploadImage() {
+    const file = document.getElementById("upload").files[0];
+    if (!file) return alert("Choose an image");
+
+    const form = new FormData();
+    form.append("image", file);
+    form.append("prompt", "Ghibli Studio style, dreamy anime illustration");
+
+    document.getElementById("loading").innerText = "Uploading... Please wait.";
+    document.getElementById("result").innerHTML = "";
+
+    const res = await fetch("https://hook.eu2.make.com/uhsiqjufw0q2tx5axepxmwaj986mx6e0", {
+      method: "POST",
+      body: form
+    });
+
+    const data = await res.json();
+    document.getElementById("loading").innerText = "";
+    document.getElementById("result").innerHTML = `
+      <img src="${data.image_url}" style="width:300px; border-radius:10px;" />
+      <br/><a href="${data.image_url}" download>Download</a>
+    `;
+  }
+</script>
+
 </body>
 </html>

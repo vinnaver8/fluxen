@@ -1,50 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Ghibli AI Generator</title>
-  <style>
-    body { background: #111; color: white; font-family: sans-serif; text-align: center; padding: 40px; }
-    .upload { background: #222; padding: 20px; border-radius: 10px; }
-    button { margin-top: 15px; background: #00ffcc; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-    #result { margin-top: 20px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozy Ghibli Art</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 20px;
+            background: linear-gradient(#fff7e6, #ffe0b2); /* Warm peach gradient */
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: #fffaf0; /* Creamy white */
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        input, button {
+            margin: 12px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ffcc80;
+            border-radius: 8px;
+            width: 80%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #ff8a65; /* Coral */
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: auto;
+            padding: 10px 30px;
+        }
+        button:hover {
+            background: #ff7043;
+        }
+        #previewBox {
+            margin: 20px auto;
+            max-width: 100%;
+            border: 3px solid #ffd54f;
+            border-radius: 10px;
+            display: none;
+        }
+        #loading {
+            display: none;
+            color: #8d6e63;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Cozy Ghibli Art</h1>
+        <p>Transform images into warm Ghibli-style masterpieces!</p>
+        <input type="text" id="prompt" placeholder="Prompt (e.g., Hello!!)" value="Hello!!">
+        <input type="file" id="imageUpload" accept="image/*">
+        <p>Leave blank for default bus.</p>
+        <button onclick="generateImage()">Create Art</button>
+        <p id="loading">Crafting... Please wait.</p>
+        <img id="previewBox" alt="Your Ghibli Art">
+        <button id="downloadBtn" style="display:none;" onclick="downloadImage()">Download Art</button>
+    </div>
 
-<h2>Upload Your Image for Ghibli AI</h2>
-<div class="upload">
-  <input type="file" id="upload" />
-  <button onclick="uploadImage()">Generate</button>
-</div>
-<div id="loading"></div>
-<div id="result"></div>
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById("prompt").value || "Hello!!";
+            const imageUpload = document.getElementById("imageUpload");
+            const previewBox = document.getElementById("previewBox");
+            const loading = document.getElementById("loading");
+            const downloadBtn = document.getElementById("downloadBtn");
 
-<script>
-  async function uploadImage() {
-    const file = document.getElementById("upload").files[0];
-    if (!file) return alert("Choose an image");
+            try {
+                loading.style.display = "block";
+                previewBox.src = "";
+                previewBox.style.display = "none";
+                downloadBtn.style.display = "none";
 
-    const form = new FormData();
-    form.append("image", file);
-    form.append("prompt", "Ghibli Studio style, dreamy anime illustration");
+                const formData = new FormData();
+                formData.append("prompt", prompt);
+                if (imageUpload.files.length > 0) {
+                    formData.append("image", imageUpload.files[0]);
+                }
 
-    document.getElementById("loading").innerText = "Uploading... Please wait.";
-    document.getElementById("result").innerHTML = "";
+                const response = await fetch("https://hook.eu2.make.com/yjfi67vv5c6ff3aqhronjkkbhbyfwqkf", { // Replace with your Make.com webhook URL
+                    method: "POST",
+                    body: formData
+                });
 
-    const res = await fetch("https://hook.eu2.make.com/uhsiqjufw0q2tx5axepxmwaj986mx6e0", {
-      method: "POST",
-      body: form
-    });
+                if (!response.ok) throw new Error(`Error: ${response.status}`);
+                const result = await response.json();
+                if (!result.imageUrl) throw new Error("No image returned");
 
-    const data = await res.json();
-    document.getElementById("loading").innerText = "";
-    document.getElementById("result").innerHTML = `
-      <img src="${data.image_url}" style="width:300px; border-radius:10px;" />
-      <br/><a id="downloadLink" href="https://jamesliu1217-easycontrol-ghibli.hf.space/gradio_api/call/single_condition_generate_image/file=..." download="ghibli_result.png">Download Ghibli Image</a>
-    `;
-  }
-</script>
+                previewBox.src = result.imageUrl;
+                previewBox.style.display = "block";
+                downloadBtn.style.display = "inline-block";
+            } catch (error) {
+                console.error(error);
+                alert(`Oops: ${error.message}`);
+            } finally {
+                loading.style.display = "none";
+            }
+        }
 
+        function downloadImage() {
+            const previewBox = document.getElementById("previewBox");
+            if (previewBox.src) {
+                const link = document.createElement("a");
+                link.href = previewBox.src;
+                link.download = "ghibli-art.png";
+                link.click();
+            }
+        }
+    </script>
 </body>
 </html>

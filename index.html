@@ -3,34 +3,56 @@
 <head>
   <title>Fluxen AI - Ghibli Image</title>
   <style>
-    body { font-family: Arial; text-align: center; padding: 40px; }
-    input { margin-top: 20px; }
-    img { margin-top: 30px; max-width: 90%; }
+    body { font-family: Arial; text-align: center; padding: 40px; background: #fef6e4; }
+    input, textarea, button { margin-top: 20px; padding: 10px; border-radius: 8px; font-size: 16px; }
+    img { margin-top: 30px; max-width: 90%; border-radius: 12px; box-shadow: 0 0 10px #ccc; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <h1>Fluxen AI - Ghibli Style Image Generator</h1>
-  <input type="file" id="imageInput" accept="image/*">
+  
+  <input type="file" id="imageInput" accept="image/*"><br>
+  <textarea id="promptInput" rows="3" cols="40" placeholder="Describe your Ghibli-style scene (optional)"></textarea><br>
   <button onclick="uploadImage()">Generate</button>
-  <div><img id="resultImage" style="display:none;"></div>
+
+  <div>
+    <img id="resultImage" class="hidden">
+    <br>
+    <a id="downloadBtn" class="hidden" download="ghibli_result.jpg">Download Image</a>
+  </div>
 
   <script>
     async function uploadImage() {
-      const input = document.getElementById('imageInput');
-      if (!input.files[0]) return alert("Select an image!");
+      const imageInput = document.getElementById('imageInput');
+      const promptInput = document.getElementById('promptInput');
+      const resultImage = document.getElementById('resultImage');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      if (!imageInput.files[0]) {
+        alert("Please upload an image first.");
+        return;
+      }
 
       const formData = new FormData();
-      formData.append("file", input.files[0]);
+      formData.append("file", imageInput.files[0]);
+      formData.append("prompt", promptInput.value || "a cozy room in Ghibli style");
 
-      const res = await fetch("https://vinnaver8-ghibli-api.hf.space/Ghibli", {
+      const response = await fetch("https://vinnaver8-ghibli-api.hf.space/generate", {
         method: "POST",
         body: formData
       });
 
-      const data = await res.json();
-      const img = document.getElementById("resultImage");
-      img.src = data.output_url;
-      img.style.display = "block";
+      const data = await response.json();
+      if (data.output_url) {
+        resultImage.src = data.output_url;
+        resultImage.classList.remove("hidden");
+
+        downloadBtn.href = data.output_url;
+        downloadBtn.classList.remove("hidden");
+      } else {
+        alert("Something went wrong. Try again.");
+      }
     }
   </script>
 </body>

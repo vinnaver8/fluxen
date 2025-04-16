@@ -2,77 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ghibli Image Generator</title>
+  <title>Anime Image Generator</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       padding: 2rem;
-      background: #fdf6e3;
-    }
-    input, button {
-      margin: 1rem 0;
+      background: #f0f0f0;
     }
     img {
-      max-width: 90%;
-      margin-top: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      max-width: 300px;
+      margin: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    .spinner {
+      display: none;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <h1>Ghibli-Style Image Generator</h1>
-  <input type="file" id="imageInput" accept="image/*" />
-  <br>
-  <button onclick="generateImage()">Generate</button>
-  <p id="status"></p>
-  <img id="outputImage" style="display:none;" />
-  <br>
-  <a id="downloadLink" style="display:none;" download="ghibli-image.png">
-    <button>Download Image</button>
-  </a>
+  <h1>Anime Style Image Generator</h1>
+
+  <input type="file" id="imageInput" accept="image/*"><br><br>
+  <button onclick="uploadImage()">Generate</button>
+
+  <div class="spinner" id="spinner">Processing...</div>
+
+  <div id="preview">
+    <h3>Original Image:</h3>
+    <img id="originalImage" src="#" alt="Preview" style="display: none;">
+  </div>
+
+  <div id="result">
+    <h3>Generated Image:</h3>
+    <img id="generatedImage" src="#" alt="Result" style="display: none;">
+    <br>
+    <a id="downloadLink" href="#" download="anime_output.png" style="display: none;">
+      <button>Download Image</button>
+    </a>
+  </div>
 
   <script>
-    async function generateImage() {
-      const fileInput = document.getElementById("imageInput");
-      const status = document.getElementById("status");
-      const outputImage = document.getElementById("outputImage");
-      const downloadLink = document.getElementById("downloadLink");
+    const apiUrl = "https://backend-h1hz.onrender.com/generate";
 
-      if (!fileInput.files[0]) {
-        status.textContent = "Please select an image first.";
-        return;
-      }
+    function uploadImage() {
+      const fileInput = document.getElementById("imageInput");
+      const file = fileInput.files[0];
+      if (!file) return alert("Please choose an image");
+
+      // Show original preview
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = document.getElementById("originalImage");
+        img.src = e.target.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+
+      // Show spinner
+      document.getElementById("spinner").style.display = "block";
 
       const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
+      formData.append("file", file);
 
-      status.textContent = "Generating...";
-      outputImage.style.display = "none";
-      downloadLink.style.display = "none";
+      fetch(apiUrl, {
+        method: "POST",
+        body: formData,
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("spinner").style.display = "none";
+        if (data.output_base64) {
+          const base64 = data.output_base64;
+          const imgUrl = `data:image/png;base64,${base64}`;
+          const img = document.getElementById("generatedImage");
+          img.src = imgUrl;
+          img.style.display = "block";
 
-      try {
-        const response = await fetch("https://backend-h1hz.onrender.com/generate", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json();
-
-        if (data.output_url) {
-          status.textContent = "Ghibli-style image ready!";
-          outputImage.src = data.output_url;
-          outputImage.style.display = "block";
-          downloadLink.href = data.output_url;
-          downloadLink.style.display = "inline-block";
+          const link = document.getElementById("downloadLink");
+          link.href = imgUrl;
+          link.style.display = "inline-block";
         } else {
-          status.textContent = "Error: " + (data.error || "Unknown error.");
+          alert("Error: " + (data.error || "Something went wrong"));
         }
-      } catch (error) {
-        status.textContent = "Error connecting to the server.";
-      }
+      })
+      .catch(err => {
+        document.getElementById("spinner").style.display = "none";
+        alert("Error: " + err.message);
+      });
     }
   </script>
 </body>

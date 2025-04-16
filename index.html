@@ -1,101 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Anime Image Generator</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2rem;
-      background: #f0f0f0;
-    }
-    img {
-      max-width: 300px;
-      margin: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-    }
-    .spinner {
-      display: none;
-      margin-top: 20px;
-    }
-  </style>
+  <title>Ghibli Image Transformer</title>
 </head>
-<body>
-  <h1>Anime Style Image Generator</h1>
-
-  <input type="file" id="imageInput" accept="image/*"><br><br>
-  <button onclick="uploadImage()">Generate</button>
-
-  <div class="spinner" id="spinner">Processing...</div>
-
-  <div id="preview">
-    <h3>Original Image:</h3>
-    <img id="originalImage" src="#" alt="Preview" style="display: none;">
-  </div>
-
-  <div id="result">
-    <h3>Generated Image:</h3>
-    <img id="generatedImage" src="#" alt="Result" style="display: none;">
-    <br>
-    <a id="downloadLink" href="#" download="anime_output.png" style="display: none;">
-      <button>Download Image</button>
-    </a>
-  </div>
+<body style="text-align:center; padding:50px">
+  <h2>Ghibli-Style Image Upload</h2>
+  <input type="file" id="imageInput" accept="image/*">
+  <br><br>
+  <button onclick="openGhibliSpace()">Transform Image</button>
 
   <script>
-    const apiUrl = "https://backend-h1hz.onrender.com/generate";
+    function openGhibliSpace() {
+      const fileInput = document.getElementById('imageInput');
+      if (fileInput.files.length === 0) {
+        alert("Please select an image first!");
+        return;
+      }
 
-    function uploadImage() {
-      const fileInput = document.getElementById("imageInput");
-      const file = fileInput.files[0];
-      if (!file) return alert("Please choose an image");
+      alert("After clicking OK, you'll be redirected to the Ghibli Space.\nUpload your image again there and click 'Submit'.");
 
-      // Show original preview
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const img = document.getElementById("originalImage");
-        img.src = e.target.result;
-        img.style.display = "block";
-      };
-      reader.readAsDataURL(file);
-
-      // Show spinner
-      document.getElementById("spinner").style.display = "block";
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      fetch(apiUrl, {
-        method: "POST",
-        body: formData,
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("spinner").style.display = "none";
-        if (data.output_base64) {
-          const base64 = data.output_base64;
-          const imgUrl = `data:image/png;base64,${base64}`;
-          const img = document.getElementById("generatedImage");
-          img.src = imgUrl;
-          img.style.display = "block";
-
-          const link = document.getElementById("downloadLink");
-          link.href = imgUrl;
-          link.style.display = "inline-block";
-        } else {
-          alert("Error: " + (data.error || "Something went wrong"));
-        }
-      })
-      .catch(err => {
-        document.getElementById("spinner").style.display = "none";
-        alert("Error: " + err.message);
-      });
+      // Open the EasyControl_Ghibli Space directly
+      window.open("https://huggingface.co/spaces/jamesliu1217/EasyControl_Ghibli", "_blank");
     }
   </script>
 </body>

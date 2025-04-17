@@ -1,26 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Ghibli Image Transformer</title>
+  <meta charset="UTF-8" />
+  <title>Fluxen Ghibli Generator</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; text-align: center; }
+    #output img { max-width: 100%; margin-top: 20px; border-radius: 10px; }
+    #loader { display: none; }
+    button { margin-top: 10px; padding: 10px 20px; }
+  </style>
 </head>
-<body style="text-align:center; padding:50px">
-  <h2>Ghibli-Style Image Upload</h2>
-  <input type="file" id="imageInput" accept="image/*">
-  <br><br>
-  <button onclick="openGhibliSpace()">Transform Image</button>
+<body>
+  <h1>Ghibli Style Image Generator</h1>
+  <input type="file" id="upload" accept="image/*" />
+  <button onclick="generate()">Generate</button>
+  <div id="loader">Please wait, generating Ghibli image...</div>
+  <div id="output"></div>
 
   <script>
-    function openGhibliSpace() {
-      const fileInput = document.getElementById('imageInput');
-      if (fileInput.files.length === 0) {
-        alert("Please select an image first!");
-        return;
-      }
+    async function generate() {
+      const file = document.getElementById("upload").files[0];
+      if (!file) return alert("Please select an image");
 
-      alert("After clicking OK, you'll be redirected to the Ghibli Space.\nUpload your image again there and click 'Submit'.");
+      document.getElementById("loader").style.display = "block";
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result.split(",")[1];
 
-      // Open the EasyControl_Ghibli Space directly
-      window.open("https://huggingface.co/spaces/jamesliu1217/EasyControl_Ghibli", "_blank");
+        const res = await fetch("https://hook.us2.make.com/rx1n5rgtd7uwhewrn7j46pgjq8abhj96", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ base64Body: base64 })
+        });
+
+        const data = await res.json();
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("output").innerHTML = `
+          <img src="${data.image_url}" id="resultImage" />
+          <br>
+          <a href="${data.image_url}" download="ghibli_image.png">
+            <button>Download Image</button>
+          </a>
+        `;
+      };
+      reader.readAsDataURL(file);
     }
   </script>
 </body>

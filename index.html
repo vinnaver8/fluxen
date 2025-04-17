@@ -2,150 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ghibli AI Image Transformer</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f7f7f8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-    .container {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 2rem;
-      max-width: 500px;
-      width: 100%;
-    }
-    .preview-box {
-      width: 100%;
-      border: 2px dashed #ccc;
-      border-radius: 0.75rem;
-      padding: 1rem;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    #preview {
-      max-width: 100%;
-      border-radius: 0.5rem;
-      margin-top: 1rem;
-    }
-    .button {
-      background-color: #10a37f;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    .button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    #loading {
-      display: none;
-      margin-top: 1rem;
-      font-style: italic;
-      color: #666;
-    }
-    #result-container {
-      display: none;
-      margin-top: 1.5rem;
-      text-align: center;
-    }
-    #result-image {
-      max-width: 100%;
-      border-radius: 0.5rem;
-      margin-bottom: 1rem;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ghibli Style Transformer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <div class="container">
-    <h2>Ghibli Image Transformer</h2>
-    <input type="file" accept="image/*" id="fileInput" />
-    <div class="preview-box" id="preview-box">
-      <p>Upload an image to preview</p>
-      <img id="preview" src="" alt="" />
-    </div>
-    <button class="button" id="submitBtn">Transform</button>
-    <div id="loading">Generating Ghibli-style image...</div>
+<body class="bg-gradient-to-br from-rose-100 to-teal-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white shadow-xl rounded-2xl p-6 max-w-xl w-full space-y-6 text-center">
+    <h1 class="text-2xl font-bold text-gray-800">Ghibli Style Image Transformer</h1>
 
-    <div id="result-container">
-      <img id="result-image" src="" alt="Result" />
-      <br />
-      <a id="downloadBtn" class="button" download="ghibli_result.jpg">Download</a>
+    <!-- Image upload -->
+    <input id="fileInput" type="file" accept="image/*" class="hidden" />
+    <div id="uploadBox" class="cursor-pointer border-2 border-dashed border-gray-300 p-10 rounded-xl hover:bg-gray-50">
+      <p class="text-gray-500">Click or drag an image to upload</p>
+    </div>
+
+    <!-- Loading -->
+    <div id="loader" class="hidden text-gray-600">
+      <svg class="animate-spin h-6 w-6 mx-auto mb-2 text-teal-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      Generating Ghibli magic...
+    </div>
+
+    <!-- Output -->
+    <div id="outputBox" class="hidden space-y-4">
+      <img id="resultImage" class="w-full rounded-lg shadow" alt="Generated Image"/>
+      <a id="downloadBtn" href="#" download="ghibli-style.jpg" class="inline-block bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">Download Image</a>
     </div>
   </div>
 
   <script>
+    const uploadBox = document.getElementById('uploadBox');
     const fileInput = document.getElementById('fileInput');
-    const preview = document.getElementById('preview');
-    const previewBox = document.getElementById('preview-box');
-    const submitBtn = document.getElementById('submitBtn');
-    const loading = document.getElementById('loading');
-    const resultContainer = document.getElementById('result-container');
-    const resultImage = document.getElementById('result-image');
+    const loader = document.getElementById('loader');
+    const outputBox = document.getElementById('outputBox');
+    const resultImage = document.getElementById('resultImage');
     const downloadBtn = document.getElementById('downloadBtn');
 
-    const webhookUrl = "https://hook.us2.make.com/rx1n5rgtd7uwhewrn7j46pgjq8abhj96"; // Replace this
+    const webhookURL = "https://hook.us2.make.com/l1ph2rp41ib8jymb5evomh7iujteg52d"; // Replace with your actual Make.com webhook URL
 
-    let selectedFile = null;
+    uploadBox.addEventListener('click', () => fileInput.click());
 
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (!file) return;
-
-      selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        preview.src = e.target.result;
-        previewBox.querySelector('p').style.display = 'none';
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+    uploadBox.addEventListener('dragover', e => {
+      e.preventDefault();
+      uploadBox.classList.add('bg-gray-100');
     });
 
-    submitBtn.addEventListener('click', async () => {
-      if (!selectedFile) {
-        alert("Please select an image first.");
-        return;
-      }
+    uploadBox.addEventListener('dragleave', () => {
+      uploadBox.classList.remove('bg-gray-100');
+    });
 
-      loading.style.display = 'block';
-      resultContainer.style.display = 'none';
+    uploadBox.addEventListener('drop', e => {
+      e.preventDefault();
+      uploadBox.classList.remove('bg-gray-100');
+      handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', e => {
+      if (e.target.files.length > 0) {
+        handleFile(e.target.files[0]);
+      }
+    });
+
+    async function handleFile(file) {
+      loader.classList.remove('hidden');
+      outputBox.classList.add('hidden');
 
       const formData = new FormData();
-      formData.append("file", selectedFile, selectedFile.name);
+      formData.append('file', file);
 
       try {
-        const res = await fetch(webhookUrl, {
-          method: "POST",
-          body: formData,
+        const response = await fetch(webhookURL, {
+          method: 'POST',
+          body: formData
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to generate image.");
-        }
+        if (!response.ok) throw new Error('Failed to get image');
 
-        const blob = await res.blob();
-        const imgUrl = URL.createObjectURL(blob);
-        resultImage.src = imgUrl;
-        downloadBtn.href = imgUrl;
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
 
-        resultContainer.style.display = 'block';
+        resultImage.src = imageUrl;
+        downloadBtn.href = imageUrl;
+
+        loader.classList.add('hidden');
+        outputBox.classList.remove('hidden');
       } catch (err) {
-        alert("Something went wrong: " + err.message);
-      } finally {
-        loading.style.display = 'none';
+        alert('Error generating image. Please try again.');
+        loader.classList.add('hidden');
       }
-    });
+    }
   </script>
 </body>
 </html>

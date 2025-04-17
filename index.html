@@ -1,50 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Fluxen Ghibli Generator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluxen Ghibli Transformer</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; text-align: center; }
-    #output img { max-width: 100%; margin-top: 20px; border-radius: 10px; }
-    #loader { display: none; }
-    button { margin-top: 10px; padding: 10px 20px; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: #fef6e4;
+      color: #001858;
+    }
+    #preview {
+      margin-top: 20px;
+      max-width: 300px;
+      border: 2px dashed #001858;
+    }
+    #outputImage {
+      margin-top: 20px;
+      max-width: 300px;
+      display: none;
+    }
+    button, input[type="file"] {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      background: #f582ae;
+      color: white;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    button:hover {
+      background: #ffb3c1;
+    }
+    #downloadBtn {
+      display: none;
+      margin-top: 10px;
+      background: #8bd3dd;
+    }
   </style>
 </head>
 <body>
-  <h1>Ghibli Style Image Generator</h1>
-  <input type="file" id="upload" accept="image/*" />
-  <button onclick="generate()">Generate</button>
-  <div id="loader">Please wait, generating Ghibli image...</div>
-  <div id="output"></div>
+  <h1>Fluxen Ghibli Style Generator</h1>
+  <input type="file" id="imageInput" accept="image/*">
+  <img id="preview" />
+  <button onclick="uploadImage()">Generate Ghibli Image</button>
+  <img id="outputImage" />
+  <a id="downloadBtn" download="ghibli_output.png">Download Image</a>  <script>
+    let selectedImage;
 
-  <script>
-    async function generate() {
-      const file = document.getElementById("upload").files[0];
-      if (!file) return alert("Please select an image");
+    document.getElementById("imageInput").addEventListener("change", function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        selectedImage = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById("preview").src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
-      document.getElementById("loader").style.display = "block";
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result.split(",")[1];
+    async function uploadImage() {
+      if (!selectedImage) {
+        alert("Please select an image first.");
+        return;
+      }
 
-        const res = await fetch("https://hook.us2.make.com/rx1n5rgtd7uwhewrn7j46pgjq8abhj96", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ base64Body: base64 })
-        });
+      const formData = new FormData();
+      formData.append("file", selectedImage);
 
-        const data = await res.json();
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("output").innerHTML = `
-          <img src="${data.image_url}" id="resultImage" />
-          <br>
-          <a href="${data.image_url}" download="ghibli_image.png">
-            <button>Download Image</button>
-          </a>
-        `;
-      };
-      reader.readAsDataURL(file);
+      const response = await fetch("https://hook.us2.make.com/rx1n5rgtd7uwhewrn7j46pgjq8abhj96", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      const imageUrl = data.image_url;
+
+      const outputImage = document.getElementById("outputImage");
+      outputImage.src = imageUrl;
+      outputImage.style.display = "block";
+
+      const downloadBtn = document.getElementById("downloadBtn");
+      downloadBtn.href = imageUrl;
+      downloadBtn.style.display = "inline-block";
     }
-  </script>
-</body>
+  </script></body>
 </html>
